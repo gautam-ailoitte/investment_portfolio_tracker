@@ -25,16 +25,13 @@ class DependencyInjection {
     // Register network dependencies
     _registerNetwork();
 
-    // // Register converters
-    // _registerConverters();
-    //
-    // // Register repositories
+    // Future: Register repositories when implementations are ready
     // _registerRepositories();
 
-    // Register use cases (if needed)
+    // Future: Register use cases when needed
     // _registerUseCases();
 
-    // Register cubits/blocs (if needed)
+    // Future: Register cubits/blocs when needed
     // _registerBlocs();
   }
 
@@ -55,47 +52,6 @@ class DependencyInjection {
     // Register API client
     getIt.registerLazySingleton<ApiClient>(() => ApiClient(getIt<Dio>()));
   }
-
-  // /// Register data converters
-  // static void _registerConverters() {
-  //   getIt.registerLazySingleton<AuthConverter>(() => AuthConverter());
-  //   getIt.registerLazySingleton<UserConverter>(() => UserConverter());
-  //   getIt.registerLazySingleton<PortfolioConverter>(() => PortfolioConverter());
-  //   getIt.registerLazySingleton<StockConverter>(() => StockConverter());
-  // }
-  //
-  // /// Register repositories
-  // static void _registerRepositories() {
-  //   // Register repository implementations
-  //   getIt.registerLazySingleton<AuthRepository>(
-  //         () => AuthRepositoryImpl(
-  //       apiClient: getIt<ApiClient>(),
-  //       converter: getIt<AuthConverter>(),
-  //       sharedPreferences: getIt<SharedPreferences>(),
-  //     ),
-  //   );
-  //
-  //   getIt.registerLazySingleton<UserRepository>(
-  //         () => UserRepositoryImpl(
-  //       apiClient: getIt<ApiClient>(),
-  //       converter: getIt<UserConverter>(),
-  //     ),
-  //   );
-  //
-  //   getIt.registerLazySingleton<PortfolioRepository>(
-  //         () => PortfolioRepositoryImpl(
-  //       apiClient: getIt<ApiClient>(),
-  //       converter: getIt<PortfolioConverter>(),
-  //     ),
-  //   );
-  //
-  //   getIt.registerLazySingleton<StockRepository>(
-  //         () => StockRepositoryImpl(
-  //       apiClient: getIt<ApiClient>(),
-  //       converter: getIt<StockConverter>(),
-  //     ),
-  //   );
-  // }
 
   /// Create and configure Dio instance
   static Dio _createDio() {
@@ -136,12 +92,21 @@ class DependencyInjection {
 class _AuthInterceptor extends Interceptor {
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
-    // Get auth token from shared preferences
-    final sharedPreferences = getIt<SharedPreferences>();
-    final token = sharedPreferences.getString(ApiConstants.storageKeyAuthToken);
+    try {
+      // Get auth token from shared preferences
+      if (getIt.isRegistered<SharedPreferences>()) {
+        final sharedPreferences = getIt<SharedPreferences>();
+        final token = sharedPreferences.getString(
+          ApiConstants.storageKeyAuthToken,
+        );
 
-    if (token != null && token.isNotEmpty) {
-      options.headers['Authorization'] = 'Bearer $token';
+        if (token != null && token.isNotEmpty) {
+          options.headers['Authorization'] = 'Bearer $token';
+        }
+      }
+    } catch (e) {
+      // Log error but continue with request
+      print('Auth Interceptor Error: $e');
     }
 
     handler.next(options);
@@ -151,13 +116,19 @@ class _AuthInterceptor extends Interceptor {
   void onError(DioException err, ErrorInterceptorHandler handler) {
     // Handle 401 unauthorized errors
     if (err.response?.statusCode == 401) {
-      // Clear stored tokens
-      final sharedPreferences = getIt<SharedPreferences>();
-      sharedPreferences.remove(ApiConstants.storageKeyAuthToken);
-      sharedPreferences.remove(ApiConstants.storageKeyRefreshToken);
+      try {
+        // Clear stored tokens
+        if (getIt.isRegistered<SharedPreferences>()) {
+          final sharedPreferences = getIt<SharedPreferences>();
+          sharedPreferences.remove(ApiConstants.storageKeyAuthToken);
+          sharedPreferences.remove(ApiConstants.storageKeyRefreshToken);
+        }
 
-      // Optionally trigger logout navigation
-      // You can emit an event or use a stream to notify the app
+        // Future: Optionally trigger logout navigation
+        // You can emit an event or use a stream to notify the app
+      } catch (e) {
+        print('Auth Error Handler Error: $e');
+      }
     }
 
     handler.next(err);
@@ -334,11 +305,14 @@ extension GetItExtension on Object {
 }
 
 /// Helper functions for common dependencies
-// class DI {
-//   static AuthRepository get authRepository => getIt<AuthRepository>();
-//   static UserRepository get userRepository => getIt<UserRepository>();
-//   static PortfolioRepository get portfolioRepository => getIt<PortfolioRepository>();
-//   static StockRepository get stockRepository => getIt<StockRepository>();
-//   static ApiClient get apiClient => getIt<ApiClient>();
-//   static SharedPreferences get sharedPreferences => getIt<SharedPreferences>();
-// }
+class DI {
+  static ApiClient get apiClient => getIt<ApiClient>();
+  static SharedPreferences get sharedPreferences => getIt<SharedPreferences>();
+  static Dio get dio => getIt<Dio>();
+
+  // Future: Add repository getters when implemented
+  // static AuthRepository get authRepository => getIt<AuthRepository>();
+  // static UserRepository get userRepository => getIt<UserRepository>();
+  // static PortfolioRepository get portfolioRepository => getIt<PortfolioRepository>();
+  // static StockRepository get stockRepository => getIt<StockRepository>();
+}
