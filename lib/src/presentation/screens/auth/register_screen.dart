@@ -12,7 +12,6 @@ import '../../widgets/custom_app_bar.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_text_field.dart';
 import '../../widgets/loading_widget.dart';
-import '../home/home_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -66,10 +65,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
         listener: (context, state) {
           if (state is AuthSuccess) {
             context.showSuccessSnackBar(AppStrings.successRegisterMessage);
-            Navigator.of(context).pushAndRemoveUntil(
-              MaterialPageRoute(builder: (_) => const HomeScreen()),
-              (route) => false,
-            );
+            // Navigator.of(context).pushAndRemoveUntil(
+            //   MaterialPageRoute(builder: (_) => const HomeScreen()),
+            //   (route) => false,
+            // ); //todo : our focus is on api first spring boot...
           } else if (state is AuthError) {
             context.showErrorSnackBar(state.message);
           }

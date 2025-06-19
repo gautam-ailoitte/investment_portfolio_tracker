@@ -11,7 +11,6 @@ import '../../cubits/auth/auth_cubit.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_text_field.dart';
 import '../../widgets/loading_widget.dart';
-import '../home/home_screen.dart';
 import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -57,9 +56,9 @@ class _LoginScreenState extends State<LoginScreen> {
         listener: (context, state) {
           if (state is AuthSuccess) {
             context.showSuccessSnackBar(AppStrings.successLoginMessage);
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (_) => const HomeScreen()),
-            );
+            // Navigator.of(context).pushReplacement(
+            //   MaterialPageRoute(builder: (_) => const HomeScreen()),
+            // ); //todo:
           } else if (state is AuthError) {
             context.showErrorSnackBar(state.message);
           }
